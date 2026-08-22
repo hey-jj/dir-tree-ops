@@ -1,0 +1,19 @@
+[package]
+name = "dir-tree-ops"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.70"
+license = "MIT"
+authors = ["Justin Jones <hey.jones@icloud.com>"]
+description = "Recursive directory copy, move, remove, and size. Symlinks preserved, moves leave the source intact until the destination is durable, errors are std::io::Error."
+keywords = ["filesystem", "copy", "move", "directory", "recursive"]
+categories = ["filesystem", "os"]
+readme = "README.md"
+repository = "https://github.com/hey-jj/dir-tree-ops"
+documentation = "https://docs.rs/dir-tree-ops"
+exclude = ["tools/"]
+
+[dependencies]
+
+[dev-dependencies]
+tempfile = "3"
