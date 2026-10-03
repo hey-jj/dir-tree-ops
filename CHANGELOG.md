@@ -4,7 +4,8 @@
 
 - `copy_tree_with_progress` and `move_tree_with_progress` now return
   `Err(InvalidInput)` when `buffer_size` exceeds the platform allocation limit,
-  instead of panicking after the destination has been created.
+  instead of panicking after the destination has been created. `copy_tree` and
+  `move_tree` apply the same check before any filesystem access.
 
 ## 0.1.0 - 2026-08-21
 
