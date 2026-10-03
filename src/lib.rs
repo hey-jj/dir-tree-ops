@@ -60,9 +60,10 @@
 //! # Errors
 //!
 //! Every operation returns `std::io::Result`. The `io::ErrorKind` of the
-//! underlying failure is preserved, and the error payload is a [`PathError`]
+//! underlying filesystem failure is preserved, and its payload is a [`PathError`]
 //! carrying the operation step and the path (or paths) involved. Downcast via
-//! `err.get_ref()` to read them.
+//! `err.get_ref()` to read them. Invalid options return `InvalidInput` before
+//! any filesystem access.
 //!
 //! # TOCTOU stance
 //!
@@ -121,6 +122,8 @@ pub struct Options {
     pub overwrite: Overwrite,
     /// Copy buffer size hint for the progress variants, in bytes.
     /// Default: `64 * 1024`. A value of zero is treated as one.
+    /// Values above `isize::MAX` return `InvalidInput` from all copy and move
+    /// functions before any filesystem access.
     pub buffer_size: usize,
 }
 
@@ -229,8 +232,9 @@ impl fmt::Display for Op {
 
 /// Downcast target for structured error context.
 ///
-/// Every error returned by this crate is an `io::Error` whose payload is a
-/// `PathError`. `Display` renders `"<op> <path>[ -> <second>]: <source
+/// Filesystem errors returned by this crate are `io::Error` values whose
+/// payload is a `PathError`. Invalid options return an error without path
+/// context. `Display` renders `"<op> <path>[ -> <second>]: <source
 /// error>"`, and `Error::source()` yields the underlying `io::Error`.
 ///
 /// ```
@@ -1643,6 +1647,16 @@ fn staged_move<'a>(
     Ok(summary)
 }
 
+fn validate_options(opts: &Options) -> io::Result<()> {
+    if opts.buffer_size > isize::MAX as usize {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "buffer_size exceeds maximum allocation",
+        ));
+    }
+    Ok(())
+}
+
 /// Recursively copy the directory tree at `src` to `dst`.
 ///
 /// `dst` names the resulting root (`src/<rel>` maps to `dst/<rel>`). Regular
@@ -1657,6 +1671,7 @@ pub fn copy_tree(
     dst: impl AsRef<Path>,
     opts: &Options,
 ) -> io::Result<Summary> {
+    validate_options(opts)?;
     copy_tree_impl(src.as_ref(), dst.as_ref(), opts, None, None)
 }
 
@@ -1673,6 +1688,7 @@ pub fn copy_tree_with_progress(
     opts: &Options,
     mut on_progress: impl FnMut(&Progress<'_>),
 ) -> io::Result<Summary> {
+    validate_options(opts)?;
     copy_tree_impl(
         src.as_ref(),
         dst.as_ref(),
@@ -1710,6 +1726,7 @@ pub fn move_tree(
     dst: impl AsRef<Path>,
     opts: &Options,
 ) -> io::Result<Summary> {
+    validate_options(opts)?;
     move_tree_impl(src.as_ref(), dst.as_ref(), opts, None, MoveCtl::none())
 }
 
@@ -1725,6 +1742,7 @@ pub fn move_tree_with_progress(
     opts: &Options,
     mut on_progress: impl FnMut(&Progress<'_>),
 ) -> io::Result<Summary> {
+    validate_options(opts)?;
     move_tree_impl(
         src.as_ref(),
         dst.as_ref(),

@@ -282,13 +282,13 @@ fn pg_04_forced_staged_conflict_progress_stops_before_total() {
 }
 
 #[test]
-fn non_progress_copy_ignores_unbounded_buffer_hint() {
+fn non_progress_copy_accepts_maximum_representable_buffer_hint() {
     let tmp = tempfile::tempdir().unwrap();
     let src = tmp.path().join("src");
     let dst = tmp.path().join("dst");
     write(&src.join("a"), b"payload");
     let opts = Options {
-        buffer_size: usize::MAX,
+        buffer_size: isize::MAX as usize,
         ..Options::default()
     };
     let result = std::panic::catch_unwind(|| copy_tree(&src, &dst, &opts));

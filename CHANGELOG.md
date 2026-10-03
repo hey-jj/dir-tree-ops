@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.1 - 2026-10-03
+
+- `copy_tree_with_progress` and `move_tree_with_progress` now return
+  `Err(InvalidInput)` when `buffer_size` exceeds the platform allocation limit,
+  instead of panicking after the destination has been created.
+
 ## 0.1.0 - 2026-08-21
 
 First release.

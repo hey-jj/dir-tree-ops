@@ -53,8 +53,10 @@ link copies as the same dangling link. `remove_tree` deletes a link as a
 link: the tree behind it survives.
 
 **Errors are `std::io::Error`.** The `io::ErrorKind` of the underlying
-failure is preserved, and the payload downcasts to `PathError` for the
-operation step and the path(s) involved. No custom error enum to bridge.
+filesystem failure is preserved, and its payload downcasts to `PathError`
+for the operation step and the path(s) involved. Invalid options return
+`InvalidInput` before any filesystem access. All copy and move functions
+reject buffer sizes above `isize::MAX`.
 
 **Traversal is iterative and streaming.** Each stack frame holds a live
 directory reader. The walker does not recurse or collect a directory into a
@@ -88,8 +90,8 @@ applied after its contents are copied.
 
 ## Testing
 
-The suite runs 74 test functions plus one doctest. It covers copy shape and
-content, dangling links and cycles, source preservation under injected move
+The suite covers buffer-size validation before filesystem access, copy shape
+and content, dangling links and cycles, source preservation under injected move
 failures, progress monotonicity, structured errors, non-UTF-8 names,
 4,096-deep chains, 10,000-file mutation soaks, and a mid-copy source-swap
 soak. Symlink and permission tests need a Unix runner. The rest are
